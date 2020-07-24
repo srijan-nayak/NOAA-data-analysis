@@ -8,3 +8,23 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 ```
+
+## Processing Data
+
+### Loading required libraries
+
+```{r}
+library(dplyr)
+library(lubridate)
+```
+
+
+### Loading data
+
+```{r load_data, cache=TRUE}
+download.file(
+    "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2",
+    destfile = "storm-data.csv.bz2"
+)
+raw_storms_data <- read.csv("storm-data.csv.bz2") %>% as_tibble()
+```

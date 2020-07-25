@@ -7,3 +7,4 @@ NCDC Storm Events-FAQ Page.pdf
 storm-data.csv.bz2
 analysis_cache
 raw_storm_data.RData
+scratchfile.R

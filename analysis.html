@@ -374,7 +374,7 @@ summary {
 <div id="loading-required-libraries" class="section level3">
 <h3>Loading required libraries</h3>
 <pre class="r"><code>library(dplyr)
-library(lubridate)</code></pre>
+library(stringr)</code></pre>
 </div>
 <div id="loading-data" class="section level3">
 <h3>Loading data</h3>
@@ -383,6 +383,50 @@ library(lubridate)</code></pre>
     destfile = &quot;storm-data.csv.bz2&quot;
 )
 raw_storms_data &lt;- read.csv(&quot;storm-data.csv.bz2&quot;) %&gt;% as_tibble()</code></pre>
+</div>
+<div id="handling-event-type-typos" class="section level3">
+<h3>Handling event type typos</h3>
+<pre class="r"><code>valid_evtpyes &lt;- c(
+    &quot;Astronomical Low Tide&quot;, &quot;Storm Surge/Tide&quot;, &quot;Avalanche&quot;, &quot;Blizzard&quot;,
+    &quot;Coastal Flood&quot;, &quot;Flash Flood&quot;, &quot;Lakeshore Flood&quot;, &quot;Flood&quot;,
+    &quot;Extreme Cold/Wind Chill&quot;, &quot;Cold/Wind Chill&quot;, &quot;Marine High Wind&quot;, &quot;Marine Strong Wind&quot;,
+    &quot;Marine Thunderstorm Wind&quot;, &quot;High Wind&quot;, &quot;Strong Wind&quot;, &quot;Thunderstorm Wind&quot;,
+    &quot;Dense Fog&quot;, &quot;Freezing Fog&quot;, &quot;Frost/Freeze&quot;, &quot;Dust Devil&quot;,
+    &quot;Dust Storm&quot;, &quot;Ice Storm&quot;, &quot;Tropical Storm&quot;, &quot;Winter Storm&quot;,
+    &quot;Dense Smoke&quot;, &quot;Heavy Rain&quot;, &quot;Heavy Snow&quot;, &quot;Lake-Effect Snow&quot;,
+    &quot;Debris Flow&quot;, &quot;Drought&quot;, &quot;Excessive Heat&quot;, &quot;Heat&quot;,
+    &quot;Funnel Cloud&quot;, &quot;Marine Hail&quot;, &quot;Hail&quot;, &quot;High Surf&quot;,
+    &quot;Hurricane (Typhoon)&quot;, &quot;Lightning&quot;, &quot;Rip Current&quot;, &quot;Seiche&quot;,
+    &quot;Sleet&quot;, &quot;Tornado&quot;, &quot;Tropical Depression&quot;, &quot;Tsunami&quot;,
+    &quot;Volcanic Ash&quot;, &quot;Waterspout&quot;, &quot;Wildfire&quot;, &quot;Winter Weather&quot;
+)
+
+generate_regex = function (evtype) {
+    # transform &#39;term (synonym)&#39; to &#39;term/synonym&#39;
+    evtype &lt;- str_replace(evtype, &quot; \\(&quot;, &quot;/&quot;)
+    evtype &lt;- str_replace(evtype, &quot;\\)&quot;, &quot;&quot;)
+    
+    # transform &#39;term/synonym&#39; to &#39;term|synonym&#39;
+    generated_or_regex &lt;- str_replace(evtype, &quot;/&quot;, &quot;|&quot;)
+    return(generated_or_regex)
+}
+
+for (evtype in valid_evtpyes) {
+    # for each valid event type get matched logical vector
+    is_evtype &lt;- grepl(generate_regex(evtype), raw_storms_data$EVTYPE,
+                       ignore.case = TRUE)
+    # change the matched event types to the valid event type
+    raw_storms_data &lt;- raw_storms_data %&gt;%
+        mutate(EVTYPE = ifelse(is_evtype, evtype, as.character(EVTYPE)))
+}</code></pre>
+<p>A lot of event types are duplicates of each other because of changes in casing and small typos. The list of event types in <code>valid_evtypes</code> is taken from the official documentation for this dataset. For each event type, an appropriate regular expression is generated, i.e. terms in ‘()’ or separated by ‘/’, are joined by ‘|’ in the regular expression, so that either term can be matched. Finally the matched terms in the raw dataset are replaced by the appropriate valid event type.</p>
+<p>Unfortunately, there are still some event types in the raw dataset that don’t match any of the valid event types. Observations with such event types are thus discarded.</p>
+<pre class="r"><code>filtered_storms_dataset &lt;- raw_storms_data %&gt;%
+    filter(EVTYPE %in% valid_evtpyes)
+
+raw_length &lt;- dim(raw_storms_data)[1]
+filtered_length &lt;- dim(filtered_storms_dataset)[1]</code></pre>
+<p>Due to discarding unmatched event types, 26% of the raw data was lost.</p>
 </div>
 </div>
 

@@ -13,11 +13,10 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 
 ### Loading required libraries
 
-```{r}
+```{r load_libraries}
 library(dplyr)
-library(lubridate)
+library(stringr)
 ```
-
 
 ### Loading data
 
@@ -28,3 +27,64 @@ download.file(
 )
 raw_storms_data <- read.csv("storm-data.csv.bz2") %>% as_tibble()
 ```
+
+### Handling event type typos
+
+```{r handle_event_typos, cache=TRUE}
+valid_evtpyes <- c(
+    "Astronomical Low Tide", "Storm Surge/Tide", "Avalanche", "Blizzard",
+    "Coastal Flood", "Flash Flood", "Lakeshore Flood", "Flood",
+    "Extreme Cold/Wind Chill", "Cold/Wind Chill", "Marine High Wind", "Marine Strong Wind",
+    "Marine Thunderstorm Wind", "High Wind", "Strong Wind", "Thunderstorm Wind",
+    "Dense Fog", "Freezing Fog", "Frost/Freeze", "Dust Devil",
+    "Dust Storm", "Ice Storm", "Tropical Storm", "Winter Storm",
+    "Dense Smoke", "Heavy Rain", "Heavy Snow", "Lake-Effect Snow",
+    "Debris Flow", "Drought", "Excessive Heat", "Heat",
+    "Funnel Cloud", "Marine Hail", "Hail", "High Surf",
+    "Hurricane (Typhoon)", "Lightning", "Rip Current", "Seiche",
+    "Sleet", "Tornado", "Tropical Depression", "Tsunami",
+    "Volcanic Ash", "Waterspout", "Wildfire", "Winter Weather"
+)
+
+generate_regex = function (evtype) {
+    # transform 'term (synonym)' to 'term/synonym'
+    evtype <- str_replace(evtype, " \\(", "/")
+    evtype <- str_replace(evtype, "\\)", "")
+    
+    # transform 'term/synonym' to 'term|synonym'
+    generated_or_regex <- str_replace(evtype, "/", "|")
+    return(generated_or_regex)
+}
+
+for (evtype in valid_evtpyes) {
+    # for each valid event type get matched logical vector
+    is_evtype <- grepl(generate_regex(evtype), raw_storms_data$EVTYPE,
+                       ignore.case = TRUE)
+    # change the matched event types to the valid event type
+    raw_storms_data <- raw_storms_data %>%
+        mutate(EVTYPE = ifelse(is_evtype, evtype, as.character(EVTYPE)))
+}
+```
+
+A lot of event types are duplicates of each other because of changes in casing
+and small typos. The list of event types in `valid_evtypes` is taken from the
+official documentation for this dataset. For each event type, an appropriate
+regular expression is generated, i.e. terms in '()' or separated by '/', are
+joined by '|' in the regular expression, so that either term can be matched.
+Finally the matched terms in the raw dataset are replaced by the appropriate
+valid event type.
+
+Unfortunately, there are still some event types in the raw dataset that don't
+match any of the valid event types. Observations with such event types are thus
+discarded.
+
+```{r discard_invalid_evtypes}
+filtered_storms_dataset <- raw_storms_data %>%
+    filter(EVTYPE %in% valid_evtpyes)
+
+raw_length <- dim(raw_storms_data)[1]
+filtered_length <- dim(filtered_storms_dataset)[1]
+```
+
+Due to discarding unmatched event types,
+`r round((1 - filtered_length/raw_length) * 100)`% of the raw data was lost.

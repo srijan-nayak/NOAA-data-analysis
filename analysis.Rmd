@@ -105,3 +105,21 @@ filtered_length <- dim(filtered_storms_data)[1]
 
 Due to discarding unmatched event types,
 `r round((1 - filtered_length/raw_length) * 100)`% of the raw data was lost.
+
+### Handling damage exponents
+
+The damage amounts listed in `PROPDMG` and `CROPDMG` are not the complete damage
+amounts. They need to be multiplied by an appropriate multiplier according to
+the exponents listed in '`ROPDMGEXP` and `CROPDMGEXP`.
+
+First, all blank values in the `EXP` columns are explicitly named `blank`.
+
+```{r rename_blank}
+filtered_storms_data <- filtered_storms_data %>% 
+    mutate(
+        PROPDMGEXP = ifelse(str_length(PROPDMGEXP) == 0,
+                            "blank", as.character(PROPDMGEXP)),
+        CROPDMGEXP = ifelse(str_length(CROPDMGEXP) == 0,
+                            "blank", as.character(CROPDMGEXP))
+    )
+```

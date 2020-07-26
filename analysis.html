@@ -441,6 +441,18 @@ raw_length &lt;- dim(selected_storms_data)[1]
 filtered_length &lt;- dim(filtered_storms_data)[1]</code></pre>
 <p>Due to discarding unmatched event types, 26% of the raw data was lost.</p>
 </div>
+<div id="handling-damage-exponents" class="section level3">
+<h3>Handling damage exponents</h3>
+<p>The damage amounts listed in <code>PROPDMG</code> and <code>CROPDMG</code> are not the complete damage amounts. They need to be multiplied by an appropriate multiplier according to the exponents listed in ’<code>ROPDMGEXP</code> and <code>CROPDMGEXP</code>.</p>
+<p>First, all blank values in the <code>EXP</code> columns are explicitly named <code>blank</code>.</p>
+<pre class="r"><code>filtered_storms_data &lt;- filtered_storms_data %&gt;% 
+    mutate(
+        PROPDMGEXP = ifelse(str_length(PROPDMGEXP) == 0,
+                            &quot;blank&quot;, as.character(PROPDMGEXP)),
+        CROPDMGEXP = ifelse(str_length(CROPDMGEXP) == 0,
+                            &quot;blank&quot;, as.character(CROPDMGEXP))
+    )</code></pre>
+</div>
 </div>
 
 

@@ -443,7 +443,7 @@ filtered_length &lt;- dim(filtered_storms_data)[1]</code></pre>
 </div>
 <div id="handling-total-damage" class="section level3">
 <h3>Handling total damage</h3>
-<p>The damage amounts listed in <code>PROPDMG</code> and <code>CROPDMG</code> are not the complete damage amounts. They need to be multiplied by an appropriate multiplier according to the exponents listed in ’<code>ROPDMGEXP</code> and <code>CROPDMGEXP</code>.</p>
+<p>The damage amounts listed in <code>PROPDMG</code> and <code>CROPDMG</code> are not the complete damage amounts. They need to be multiplied by an appropriate multiplier according to the exponents listed in <code>PROPDMGEXP</code> and <code>CROPDMGEXP</code>.</p>
 <p>First, all blank values in the <code>EXP</code> columns are explicitly named <code>blank</code>.</p>
 <pre class="r"><code>filtered_storms_data &lt;- filtered_storms_data %&gt;% 
     mutate(

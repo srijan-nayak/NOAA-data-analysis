@@ -441,8 +441,8 @@ raw_length &lt;- dim(selected_storms_data)[1]
 filtered_length &lt;- dim(filtered_storms_data)[1]</code></pre>
 <p>Due to discarding unmatched event types, 26% of the raw data was lost.</p>
 </div>
-<div id="handling-damage-exponents" class="section level3">
-<h3>Handling damage exponents</h3>
+<div id="handling-total-damage" class="section level3">
+<h3>Handling total damage</h3>
 <p>The damage amounts listed in <code>PROPDMG</code> and <code>CROPDMG</code> are not the complete damage amounts. They need to be multiplied by an appropriate multiplier according to the exponents listed in ’<code>ROPDMGEXP</code> and <code>CROPDMGEXP</code>.</p>
 <p>First, all blank values in the <code>EXP</code> columns are explicitly named <code>blank</code>.</p>
 <pre class="r"><code>filtered_storms_data &lt;- filtered_storms_data %&gt;% 
@@ -452,6 +452,71 @@ filtered_length &lt;- dim(filtered_storms_data)[1]</code></pre>
         CROPDMGEXP = ifelse(str_length(CROPDMGEXP) == 0,
                             &quot;blank&quot;, as.character(CROPDMGEXP))
     )</code></pre>
+<p>The possible values in the <code>EXP</code> columns are as follows:</p>
+<ul>
+<li><strong>H,h</strong> = hundreds = 100x</li>
+<li><strong>K,k</strong> = thousands = 1,000x</li>
+<li><strong>M,m</strong> = millions = 1,000,000x</li>
+<li><strong>B,b</strong> = billions = 1,000,000,000x</li>
+<li><strong>+</strong> = 1x</li>
+<li><strong>-</strong> = 0x</li>
+<li><strong>?</strong> = 0x</li>
+<li><strong>blank</strong> = 0x</li>
+<li><strong>0-8</strong> = 10x</li>
+</ul>
+<p>The above information about possible values in the <code>EXP</code> column was taken from this <a href="https://rstudio-pubs-static.s3.amazonaws.com/58957_37b6723ee52b455990e149edde45e5b6.html">work</a> titled “How To Handle Exponent Value of PROPDMGEXP and CROPDMGEXP”.</p>
+<pre class="r"><code># define mapping for damage multiplier
+multiplier = list(
+    &quot;h&quot; = 100,
+    &quot;k&quot; = 1000,
+    &quot;m&quot; = 1000000,
+    &quot;b&quot; = 1000000000,
+    &quot;+&quot; = 1,
+    &quot;-&quot; = 0,
+    &quot;?&quot; = 0,
+    &quot;blank&quot; = 0
+)
+
+# check if a given string is numeric
+is_numeric &lt;- function(x) !grepl(&quot;\\D&quot;, x)
+
+final_storms_data &lt;- filtered_storms_data %&gt;% 
+    mutate(
+        # convert both DMGEXP columns to lower case for easy multiplier matching
+        PROPDMGEXP = tolower(PROPDMGEXP),
+        CROPDMGEXP = tolower(CROPDMGEXP),
+
+        # if given value is numeric, multiplier is 10, else matched from
+        # multiplier list
+        propdmg_multiplier = as.numeric(
+            ifelse(is_numeric(PROPDMGEXP), 10, multiplier[PROPDMGEXP])
+        ),
+        cropdmg_multiplier = as.numeric(
+            ifelse(is_numeric(CROPDMGEXP), 10, multiplier[CROPDMGEXP])
+        ),
+
+        # total damage = DMG * multiplier
+        property_damage = PROPDMG * propdmg_multiplier,
+        crop_damage = CROPDMG * cropdmg_multiplier
+    ) %&gt;% 
+    select(
+        event_type = EVTYPE,
+        fatalaties = FATALITIES,
+        injuries = INJURIES,
+        property_damage,
+        crop_damage
+    )</code></pre>
+<p>The final tidy data required for this analysis is created by multiplying values in <code>DMG</code> columns with the appropriate multipliers as defined by the <code>EXP</code> columns.</p>
+<pre class="r"><code>head(final_storms_data)</code></pre>
+<pre><code>## # A tibble: 6 x 5
+##   event_type fatalaties injuries property_damage crop_damage
+##   &lt;chr&gt;           &lt;dbl&gt;    &lt;dbl&gt;           &lt;dbl&gt;       &lt;dbl&gt;
+## 1 Tornado             0       15           25000           0
+## 2 Tornado             0        0            2500           0
+## 3 Tornado             0        2           25000           0
+## 4 Tornado             0        2            2500           0
+## 5 Tornado             0        2            2500           0
+## 6 Tornado             0        6            2500           0</code></pre>
 </div>
 </div>
 

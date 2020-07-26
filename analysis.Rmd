@@ -106,7 +106,7 @@ filtered_length <- dim(filtered_storms_data)[1]
 Due to discarding unmatched event types,
 `r round((1 - filtered_length/raw_length) * 100)`% of the raw data was lost.
 
-### Handling damage exponents
+### Handling total damage
 
 The damage amounts listed in `PROPDMG` and `CROPDMG` are not the complete damage
 amounts. They need to be multiplied by an appropriate multiplier according to
@@ -122,4 +122,72 @@ filtered_storms_data <- filtered_storms_data %>%
         CROPDMGEXP = ifelse(str_length(CROPDMGEXP) == 0,
                             "blank", as.character(CROPDMGEXP))
     )
+```
+
+The possible values in the `EXP` columns are as follows:
+
+ - **H,h** = hundreds = 100x
+ - **K,k** = thousands = 1,000x
+ - **M,m** = millions = 1,000,000x
+ - **B,b** = billions = 1,000,000,000x
+ - **+** = 1x
+ - **-** = 0x
+ - **?** = 0x
+ - **blank** = 0x
+ - **0-8** = 10x
+ 
+ The above information about possible values in the `EXP` column was taken from
+ this [work](https://rstudio-pubs-static.s3.amazonaws.com/58957_37b6723ee52b455990e149edde45e5b6.html)
+ titled "How To Handle Exponent Value of PROPDMGEXP and CROPDMGEXP".
+ 
+```{r total_damage}
+# define mapping for damage multiplier
+multiplier = list(
+    "h" = 100,
+    "k" = 1000,
+    "m" = 1000000,
+    "b" = 1000000000,
+    "+" = 1,
+    "-" = 0,
+    "?" = 0,
+    "blank" = 0
+)
+
+# check if a given string is numeric
+is_numeric <- function(x) !grepl("\\D", x)
+
+final_storms_data <- filtered_storms_data %>% 
+    mutate(
+        # convert both DMGEXP columns to lower case for easy multiplier matching
+        PROPDMGEXP = tolower(PROPDMGEXP),
+        CROPDMGEXP = tolower(CROPDMGEXP),
+
+        # if given value is numeric, multiplier is 10, else matched from
+        # multiplier list
+        propdmg_multiplier = as.numeric(
+            ifelse(is_numeric(PROPDMGEXP), 10, multiplier[PROPDMGEXP])
+        ),
+        cropdmg_multiplier = as.numeric(
+            ifelse(is_numeric(CROPDMGEXP), 10, multiplier[CROPDMGEXP])
+        ),
+
+        # total damage = DMG * multiplier
+        property_damage = PROPDMG * propdmg_multiplier,
+        crop_damage = CROPDMG * cropdmg_multiplier
+    ) %>% 
+    select(
+        event_type = EVTYPE,
+        fatalaties = FATALITIES,
+        injuries = INJURIES,
+        property_damage,
+        crop_damage
+    )
+```
+
+The final tidy data required for this analysis is created by multiplying values
+in `DMG` columns with the appropriate multipliers as defined by the
+`EXP` columns.
+
+```{r tidy_data_display}
+head(final_storms_data)
 ```

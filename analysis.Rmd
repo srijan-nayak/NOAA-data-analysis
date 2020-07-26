@@ -31,7 +31,7 @@ raw_storms_data <- read.csv("storm-data.csv.bz2") %>% as_tibble()
 ### Selecting required variables
 
 ```{r select_variables}
-selected_storms_dataset <- raw_storms_data %>% select(
+selected_storms_data <- raw_storms_data %>% select(
     EVTYPE,
     FATALITIES,
     INJURIES,
@@ -75,10 +75,10 @@ generate_regex = function (evtype) {
 
 for (evtype in valid_evtpyes) {
     # for each valid event type get matched logical vector
-    is_evtype <- grepl(generate_regex(evtype), selected_storms_dataset$EVTYPE,
+    is_evtype <- grepl(generate_regex(evtype), selected_storms_data$EVTYPE,
                        ignore.case = TRUE)
     # change the matched event types to the valid event type
-    selected_storms_dataset <- selected_storms_dataset %>%
+    selected_storms_data <- selected_storms_data %>%
         mutate(EVTYPE = ifelse(is_evtype, evtype, as.character(EVTYPE)))
 }
 ```
@@ -96,11 +96,11 @@ match any of the valid event types. Observations with such event types are thus
 discarded.
 
 ```{r discard_invalid_evtypes}
-filtered_storms_dataset <- selected_storms_dataset %>%
+filtered_storms_data <- selected_storms_data %>%
     filter(EVTYPE %in% valid_evtpyes)
 
-raw_length <- dim(selected_storms_dataset)[1]
-filtered_length <- dim(filtered_storms_dataset)[1]
+raw_length <- dim(selected_storms_data)[1]
+filtered_length <- dim(filtered_storms_data)[1]
 ```
 
 Due to discarding unmatched event types,

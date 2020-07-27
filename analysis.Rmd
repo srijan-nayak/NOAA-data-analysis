@@ -217,3 +217,23 @@ final_storms_data %>%
 
 Looking at the above bar plot, it is clear that on average, **Tsunamis** and
 **heat waves** cause more deaths than other weather events.
+
+```{r avg_injuries}
+final_storms_data %>%
+    group_by(event_type) %>%
+    summarise(avg_injuries = mean(injuries)) %>%
+    arrange(desc(avg_injuries)) %>%
+    head(10) %>%
+    ggplot(aes(x = reorder(event_type, avg_injuries), y = avg_injuries)) +
+    geom_bar(stat = "identity") +
+    labs(title = "Top 10 most dangerous weather events by injuries",
+         x = "Event type", y = "Average number of injuries") +
+    coord_flip()
+```
+
+Looking at the average number of injuries for each event type, again **tsunami**
+is at the top, but this time followed by **hurricane/typhoon**, **heat waves**
+and others.
+
+Thus, **tsunamis** and **heat waves** are 2 of the most dangerous weather events
+with respect to the population health.

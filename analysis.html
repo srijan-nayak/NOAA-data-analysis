@@ -531,6 +531,7 @@ final_storms_data &lt;- filtered_storms_data %&gt;%
     group_by(event_type) %&gt;%
     summarise(avg_fatalities = mean(fatalities)) %&gt;%
     arrange(desc(avg_fatalities)) %&gt;%
+    # select top 10 event types with the most fatalities
     head(10) %&gt;%
     ggplot(aes(x = reorder(event_type, avg_fatalities), y = avg_fatalities)) +
     geom_bar(stat = &quot;identity&quot;) +
@@ -543,6 +544,7 @@ final_storms_data &lt;- filtered_storms_data %&gt;%
     group_by(event_type) %&gt;%
     summarise(avg_injuries = mean(injuries)) %&gt;%
     arrange(desc(avg_injuries)) %&gt;%
+    # select top 10 event types with the most injuries
     head(10) %&gt;%
     ggplot(aes(x = reorder(event_type, avg_injuries), y = avg_injuries)) +
     geom_bar(stat = &quot;identity&quot;) +
@@ -561,6 +563,7 @@ final_storms_data &lt;- filtered_storms_data %&gt;%
     group_by(event_type) %&gt;%
     summarise(avg_damage = mean(total_damage)) %&gt;%
     arrange(desc(avg_damage)) %&gt;%
+    # select top 10 event types with the most financial damages
     head(10) %&gt;%
     ggplot(aes(x = reorder(event_type, avg_damage), y = avg_damage)) +
     geom_bar(stat = &quot;identity&quot;) +

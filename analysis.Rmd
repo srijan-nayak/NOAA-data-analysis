@@ -237,3 +237,25 @@ and others.
 
 Thus, **tsunamis** and **heat waves** are 2 of the most dangerous weather events
 with respect to the population health.
+
+### Weather events with the greatest economic consequences
+
+```{r}
+final_storms_data %>%
+    # sum property and crop damage
+    mutate(total_damage = property_damage + crop_damage) %>%
+    group_by(event_type) %>%
+    summarise(avg_damage = mean(total_damage)) %>%
+    arrange(desc(avg_damage)) %>%
+    head(10) %>%
+    ggplot(aes(x = reorder(event_type, avg_damage), y = avg_damage)) +
+    geom_bar(stat = "identity") +
+    labs(title = "Top 10 weather events with the greatest economic consequences",
+         x = "Event type", y = "Average financial damage (in USD)") +
+    coord_flip()
+```
+
+After adding property damage and crop damage together, then taking the average 
+of this total financial damage for each weather event type, it is clear that
+**hurricanes/typhoons** cause the most financial damage on average, and thus
+have the greatest economic consequences.

@@ -1,7 +1,6 @@
 ---
-title: "NOAA Storm Data Analysis"
+title: "The most dangerous weather events in the United States of America"
 author: "Srijan Nayak"
-date: "23/07/2020"
 output: html_document
 ---
 

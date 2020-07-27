@@ -104,7 +104,7 @@ filtered_length <- dim(filtered_storms_data)[1]
 ```
 
 Due to discarding unmatched event types,
-`r round((1 - filtered_length/raw_length) * 100)`% of the raw data was lost.
+`r round((1 - filtered_length/raw_length) * 100)`% of the raw data is lost.
 
 ### Handling total damage
 

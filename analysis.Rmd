@@ -191,3 +191,29 @@ in `DMG` columns with the appropriate multipliers as defined by the
 ```{r tidy_data_display}
 head(final_storms_data)
 ```
+
+## Results
+
+### Loading ggplot2
+
+```{r load_ggplot2}
+library(ggplot2)
+```
+
+### Weather events most dangerous to population health
+
+```{r avg_fatalaties}
+final_storms_data %>%
+    group_by(event_type) %>%
+    summarise(avg_fatalaties = mean(fatalaties)) %>%
+    arrange(desc(avg_fatalaties)) %>%
+    head(10) %>%
+    ggplot(aes(x = reorder(event_type, avg_fatalaties), y = avg_fatalaties)) +
+    geom_bar(stat = "identity") +
+    labs(title = "Top 10 most dangerous weather events by fatalaties",
+         x = "Event type", y = "Average number of fatalaties") +
+    coord_flip()
+```
+
+Looking at the above bar plot, it is clear that on average, **Tsunamis** and
+**heat waves** cause more deaths than other weather events.

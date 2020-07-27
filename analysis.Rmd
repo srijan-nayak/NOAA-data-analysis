@@ -177,7 +177,7 @@ final_storms_data <- filtered_storms_data %>%
     ) %>% 
     select(
         event_type = EVTYPE,
-        fatalaties = FATALITIES,
+        fatalities = FATALITIES,
         injuries = INJURIES,
         property_damage,
         crop_damage
@@ -202,16 +202,16 @@ library(ggplot2)
 
 ### Weather events most dangerous to population health
 
-```{r avg_fatalaties}
+```{r avg_fatalities}
 final_storms_data %>%
     group_by(event_type) %>%
-    summarise(avg_fatalaties = mean(fatalaties)) %>%
-    arrange(desc(avg_fatalaties)) %>%
+    summarise(avg_fatalities = mean(fatalities)) %>%
+    arrange(desc(avg_fatalities)) %>%
     head(10) %>%
-    ggplot(aes(x = reorder(event_type, avg_fatalaties), y = avg_fatalaties)) +
+    ggplot(aes(x = reorder(event_type, avg_fatalities), y = avg_fatalities)) +
     geom_bar(stat = "identity") +
-    labs(title = "Top 10 most dangerous weather events by fatalaties",
-         x = "Event type", y = "Average number of fatalaties") +
+    labs(title = "Top 10 most dangerous weather events by fatalities",
+         x = "Event type", y = "Average number of fatalities") +
     coord_flip()
 ```
 
